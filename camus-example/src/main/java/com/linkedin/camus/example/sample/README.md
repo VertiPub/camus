@@ -15,11 +15,11 @@ First, build camus. "mvn install" in the root camus directory will create a jar,
 
 Next, write dummy events into Kafka under the "EXAMPLE_LOG" topic. Invoke:
 
-java -cp ~/camus/camus-example/target/camus-example-0.1.0-SNAPSHOT-shaded.jar com.linkedin.camus.example.sample.WriteExampleDataToKafka <ZooKeeperHost>:<ZooKeeper Port> EXAMPLE_LOG
+java -cp ~/camus/camus-example/target/camus-example-0.1.0-SNAPSHOT-shaded.jar com.linkedin.camus.example.sample.WriteExampleDataToKafka \<ZooKeeperHost\>:\<ZooKeeper Port\> EXAMPLE_LOG
 
 Prior to invoking camus, make sure camus.properties has the following changes:
 
-zookeeper.hosts=<your ZooKeeper host>
+zookeeper.hosts=\<your ZooKeeper host\>
 
 camus.message.decoder.class=com.linkedin.camus.example.sample.ExampleDataMessageDecoder
 
@@ -36,7 +36,7 @@ hadoop jar ~/camus/camus-example/target/camus-example-0.1.0-SNAPSHOT-shaded.jar 
 
 Once it completes, you should see data in HDFS:
 
-<camus output directory as specified in camus.properties>/EXAMPLE_LOG. For example, hdfs:///tmp/camus/EXAMPLE_LOG/
+\<camus output directory as per camus.properties\>/EXAMPLE_LOG. For example, hdfs:///tmp/camus/EXAMPLE_LOG/
 
 
 
