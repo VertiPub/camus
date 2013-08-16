@@ -24,7 +24,7 @@ public class WriteExampleDataToKafka {
 
 	// Get ZooKeeper connection string
 	if (args.length != 2) {
-	    System.err.println("Usage: WriteToKafka <ZK String eg. zk.example.com:2181> <Kafka Topic eg. EXAMPLE_LOG>");
+	    System.err.println("Usage: WriteExampleDataToKafka <ZK String eg. zk.example.com:2181> <Kafka Topic eg. EXAMPLE_LOG>");
 	    System.exit(1);
 	}
 
