@@ -36,7 +36,7 @@ import com.linkedin.camus.etl.kafka.common.EtlRequest;
 import com.linkedin.camus.etl.kafka.common.ExceptionWritable;
 import com.linkedin.camus.etl.kafka.common.KafkaReader;
 
-public class EtlRecordReader extends RecordReader<EtlKey, AvroWrapper<Object>> {
+public class EtlRecordReader extends RecordReader<EtlKey, CamusWrapper> {
     private static final String PRINT_MAX_DECODER_EXCEPTIONS = "max.decoder.exceptions.to.print";
     private TaskAttemptContext context;
 
@@ -47,10 +47,10 @@ public class EtlRecordReader extends RecordReader<EtlKey, AvroWrapper<Object>> {
     private long readBytes = 0;
 
     private boolean skipSchemaErrors = false;
-    private MessageDecoder<Message, Record> decoder;
+    private MessageDecoder decoder;
     private final BytesWritable msgValue = new BytesWritable();
     private final EtlKey key = new EtlKey();
-    private AvroWrapper<Object> value = new AvroWrapper<Object>(new Object());
+    private CamusWrapper value;
 
     private int maxPullHours = 0;
     private int exceptionCount = 0;
@@ -177,7 +177,7 @@ public class EtlRecordReader extends RecordReader<EtlKey, AvroWrapper<Object>> {
     }
 
     @Override
-    public AvroWrapper<Object> getCurrentValue() throws IOException, InterruptedException {
+    public CamusWrapper getCurrentValue() throws IOException, InterruptedException {
         return value;
     }
 
@@ -196,7 +196,7 @@ public class EtlRecordReader extends RecordReader<EtlKey, AvroWrapper<Object>> {
 
         while (true) {
             try {
-                if (reader == null || reader.hasNext() == false) {
+                if (reader == null || !reader.hasNext()) {
                     EtlRequest request = split.popRequest();
                     if (request == null) {
                         return false;
@@ -208,7 +208,7 @@ public class EtlRecordReader extends RecordReader<EtlKey, AvroWrapper<Object>> {
 
                     key.set(request.getTopic(), request.getNodeId(), request.getPartition(),
                             request.getOffset(), request.getOffset(), 0);
-                    value = new AvroWrapper<Object>(new Object());
+                    value = null;
 
                     System.out.println("topic:" + request.getTopic() + " partition:"
                             + request.getPartition() + " beginOffset:" + request.getOffset()
@@ -226,7 +226,7 @@ public class EtlRecordReader extends RecordReader<EtlKey, AvroWrapper<Object>> {
                             EtlInputFormat.getKafkaClientTimeout(mapperContext),
                             EtlInputFormat.getKafkaClientBufferSize(mapperContext));
 
-                    decoder = (MessageDecoder<Message, Record>) MessageDecoderFactory.createMessageDecoder(context, request.getTopic());
+                    decoder = MessageDecoderFactory.createMessageDecoder(context, request.getTopic());
                 }
 
                 while (reader.getNext(key, msgValue)) {
@@ -250,15 +250,13 @@ public class EtlRecordReader extends RecordReader<EtlKey, AvroWrapper<Object>> {
                         wrapper = getWrappedRecord(key.getTopic(), message);
                     } catch (Exception e) {
                         if(exceptionCount < getMaximumDecoderExceptionsToPrint(context))
-				{
-					mapperContext.write(key, new ExceptionWritable(e));
-					exceptionCount++;
-				} else
-				if(exceptionCount == getMaximumDecoderExceptionsToPrint(context))
-				{
-					exceptionCount = Integer.MAX_VALUE; //Any random value
-					System.out.println("The same exception has occured for more than " + getMaximumDecoderExceptionsToPrint(context) + " records. All further exceptions will not be printed");	
-				}
+                        {
+                            mapperContext.write(key, new ExceptionWritable(e));
+                            exceptionCount++;
+                        } else if(exceptionCount == getMaximumDecoderExceptionsToPrint(context)) {
+                            exceptionCount = Integer.MAX_VALUE; //Any random value
+                            System.out.println("The same exception has occured for more than " + getMaximumDecoderExceptionsToPrint(context) + " records. All further exceptions will not be printed");
+                        }
                         continue;
                     }
 
@@ -296,7 +294,7 @@ public class EtlRecordReader extends RecordReader<EtlKey, AvroWrapper<Object>> {
                     }
 
                     long secondTime = System.currentTimeMillis();
-                    value.datum(wrapper.getRecord());
+                    value = wrapper;
                     long decodeTime = ((secondTime - tempTime));
 
                     mapperContext.getCounter("total", "decode-time(ms)").increment(decodeTime);
