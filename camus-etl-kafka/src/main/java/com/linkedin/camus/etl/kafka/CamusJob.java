@@ -1,50 +1,21 @@
 package com.linkedin.camus.etl.kafka;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.TreeMap;
-
-import org.apache.avro.mapred.AvroWrapper;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.OptionBuilder;
+import com.linkedin.camus.etl.kafka.common.*;
+import com.linkedin.camus.etl.kafka.mapred.EtlInputFormat;
+import com.linkedin.camus.etl.kafka.mapred.EtlMultiOutputFormat;
+import org.apache.commons.cli.*;
 import org.apache.commons.cli.Options;
-import org.apache.commons.cli.PosixParser;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.filecache.DistributedCache;
-import org.apache.hadoop.fs.ContentSummary;
-import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.io.SequenceFile;
-import org.apache.hadoop.mapred.JobClient;
-import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.*;
 import org.apache.hadoop.mapred.JobID;
-import org.apache.hadoop.mapred.TIPStatus;
-// import org.apache.hadoop.mapred.TaskCompletionEvent;
 import org.apache.hadoop.mapred.TaskReport;
-import org.apache.hadoop.mapreduce.TaskCompletionEvent;
-import org.apache.hadoop.mapreduce.Counter;
-import org.apache.hadoop.mapreduce.CounterGroup;
+import org.apache.hadoop.mapreduce.*;
 import org.apache.hadoop.mapreduce.Counters;
-import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.TaskCompletionEvent;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
@@ -53,13 +24,13 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormatter;
 
-import com.linkedin.camus.etl.kafka.common.DateUtils;
-import com.linkedin.camus.etl.kafka.common.EtlCounts;
-import com.linkedin.camus.etl.kafka.common.EtlKey;
-import com.linkedin.camus.etl.kafka.common.EtlZkClient;
-import com.linkedin.camus.etl.kafka.common.ExceptionWritable;
-import com.linkedin.camus.etl.kafka.mapred.EtlInputFormat;
-import com.linkedin.camus.etl.kafka.mapred.EtlMultiOutputFormat;
+import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.text.NumberFormat;
+import java.util.*;
+
+// import org.apache.hadoop.mapred.TaskCompletionEvent;
 
 public class CamusJob extends Configured implements Tool {
 
@@ -264,8 +235,8 @@ public class CamusJob extends Configured implements Tool {
 
         job.setInputFormatClass(EtlInputFormat.class);
         job.setOutputFormatClass(EtlMultiOutputFormat.class);
-        job.setOutputKeyClass(EtlKey.class);
-        job.setOutputValueClass(AvroWrapper.class);
+//        job.setOutputKeyClass(EtlKey.class);
+//        job.setOutputValueClass(AvroWrapper.class);
 
         job.setNumReduceTasks(0);
 

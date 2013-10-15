@@ -1,39 +1,6 @@
 package com.linkedin.camus.etl.kafka.mapred;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Properties;
-import java.util.Set;
-
-import kafka.message.Message;
-
-import org.apache.avro.generic.GenericData.Record;
-import org.apache.avro.mapred.AvroWrapper;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.PathFilter;
-import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.io.SequenceFile;
-import org.apache.hadoop.mapreduce.InputFormat;
-import org.apache.hadoop.mapreduce.InputSplit;
-import org.apache.hadoop.mapreduce.JobContext;
-import org.apache.hadoop.mapreduce.RecordReader;
-import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.log4j.Logger;
-
-import scala.actors.threadpool.Arrays;
-
+import com.linkedin.camus.coders.CamusWrapper;
 import com.linkedin.camus.coders.MessageDecoder;
 import com.linkedin.camus.etl.kafka.CamusJob;
 import com.linkedin.camus.etl.kafka.coders.KafkaAvroMessageDecoder;
@@ -41,11 +8,25 @@ import com.linkedin.camus.etl.kafka.coders.MessageDecoderFactory;
 import com.linkedin.camus.etl.kafka.common.EtlKey;
 import com.linkedin.camus.etl.kafka.common.EtlRequest;
 import com.linkedin.camus.etl.kafka.common.EtlZkClient;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.PathFilter;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.mapreduce.*;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.log4j.Logger;
+import scala.actors.threadpool.Arrays;
+
+import java.io.IOException;
+import java.util.*;
 
 /**
  * Input format for a Kafka pull job.
  */
-public class EtlInputFormat extends InputFormat<EtlKey, AvroWrapper<Object>> {
+public class EtlInputFormat extends InputFormat<EtlKey, CamusWrapper> {
     public static final String ZK_HOSTS = "zookeeper.hosts";
     public static final String ZK_TOPIC_PATH = "zookeeper.broker.topics";
     public static final String ZK_BROKER_PATH = "zookeeper.broker.nodes";
@@ -71,7 +52,7 @@ public class EtlInputFormat extends InputFormat<EtlKey, AvroWrapper<Object>> {
     private final Logger log = Logger.getLogger(getClass());
 
     @Override
-    public RecordReader<EtlKey, AvroWrapper<Object>> createRecordReader(InputSplit split,
+    public RecordReader<EtlKey, CamusWrapper> createRecordReader(InputSplit split,
             TaskAttemptContext context) throws IOException, InterruptedException {
         return new EtlRecordReader(split, context);
     }
@@ -479,13 +460,13 @@ public class EtlInputFormat extends InputFormat<EtlKey, AvroWrapper<Object>> {
         return job.getConfiguration().getStrings(ETL_AUDIT_IGNORE_SERVICE_TOPIC_LIST);
     }
 
-    public static void setMessageDecoderClass(JobContext job, Class<KafkaAvroMessageDecoder> cls) {
+    public static void setMessageDecoderClass(JobContext job, Class<MessageDecoder> cls) {
         job.getConfiguration().setClass(CAMUS_MESSAGE_DECODER_CLASS, cls,
-                KafkaAvroMessageDecoder.class);
+            MessageDecoder.class);
     }
 
-    public static Class<KafkaAvroMessageDecoder> getMessageDecoderClass(JobContext job) {
-        return (Class<KafkaAvroMessageDecoder>) job.getConfiguration().getClass(
+    public static Class<MessageDecoder> getMessageDecoderClass(JobContext job) {
+        return (Class<MessageDecoder>) job.getConfiguration().getClass(
                 CAMUS_MESSAGE_DECODER_CLASS, KafkaAvroMessageDecoder.class);
     }
 
