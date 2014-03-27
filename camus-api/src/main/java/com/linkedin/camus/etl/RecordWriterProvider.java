@@ -8,16 +8,14 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputCommitter;
 import java.io.IOException;
 
 /**
- * Created with IntelliJ IDEA.
- * User: tnorden@visiblemeasures.com
- * Date: 10/15/13
- * Time: 1:07 PM
+ *
+ *
  */
 public interface RecordWriterProvider {
 
-  String getFilenameExtension();
+    String getFilenameExtension();
 
-  RecordWriter<IEtlKey, CamusWrapper> getDataRecordWriter(
-      TaskAttemptContext context, String fileName, CamusWrapper data, FileOutputCommitter committer) throws IOException,
-      InterruptedException;
+    RecordWriter<IEtlKey, CamusWrapper> getDataRecordWriter(
+            TaskAttemptContext context, String fileName, CamusWrapper data, FileOutputCommitter committer) throws IOException,
+            InterruptedException;
 }
